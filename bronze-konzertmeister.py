@@ -15,20 +15,18 @@ import requests
 import json
 from pathlib import Path
 from datetime import datetime
+import copy
 
 
 # COMMAND ----------
 
-from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType, BooleanType
+from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType, BooleanType, MapType
 from datetime import datetime
 
 # COMMAND ----------
 
 bronze_volume = Path("/Volumes/bmk_dev/bronze/konzertmeister_attendance/")
-
-# COMMAND ----------
-
-dbutils.fs.mkdirs(str(bronze_volume))
+spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.bronze.konzertmeister_attendance")
 
 # COMMAND ----------
 
@@ -204,8 +202,11 @@ for key, value in get_urls.items():
 
 # COMMAND ----------
 
+table_name_orgs = f"{catalog}.bronze.km_orgs"
+spark.sql(f"DROP TABLE IF EXISTS {table_name_orgs}")
+
 # Define the schema
-schema = StructType([
+schema_orgs = StructType([
     StructField("id", IntegerType(), True),
     StructField("name", StringType(), True),
     StructField("parentName", StringType(), True),
@@ -246,10 +247,10 @@ schema = StructType([
 ])
 
 # Create DataFrame with the defined schema
-df_orgs = spark.createDataFrame(data['orgs'], schema)
+df_orgs = spark.createDataFrame(data['orgs'], schema_orgs)
 
 # Write DataFrame to Delta table
-df_orgs.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.bronze.km_orgs")
+df_orgs.write.format("delta").mode("overwrite").saveAsTable(table_name_orgs)
 
 # COMMAND ----------
 
@@ -257,6 +258,9 @@ df_orgs.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.bronze.k
 # MAGIC # Appointments
 
 # COMMAND ----------
+
+table_name_appointments = f"{catalog}.bronze.km_appointments"
+spark.sql(f"DROP TABLE IF EXISTS {table_name_appointments}")
 
 # Define the schema
 schema_appointments = StructType([
@@ -321,7 +325,7 @@ for appointment in data['appointments']:
 df_appointments = spark.createDataFrame(data['appointments'], schema_appointments)
 
 # Write DataFrame to Delta table
-df_appointments.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.bronze.km_appointments")
+df_appointments.write.format("delta").mode("overwrite").saveAsTable(table_name_appointments)
 
 # COMMAND ----------
 
@@ -329,6 +333,9 @@ df_appointments.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.
 # MAGIC # kmUsers
 
 # COMMAND ----------
+
+table_name_kmUsers = f"{catalog}.bronze.km_kmUsers"
+spark.sql(f"DROP TABLE IF EXISTS {table_name_kmUsers}")
 
 # Define the schema
 schema_kmUsers = StructType(
@@ -360,9 +367,12 @@ for user in data["kmUsers"]:
 df_kmUsers = spark.createDataFrame(data["kmUsers"], schema_kmUsers)
 
 # Write DataFrame to Delta table
-df_kmUsers.write.format("delta").mode("overwrite").saveAsTable(
-    f"{catalog}.bronze.km_kmUsers"
-)
+df_kmUsers.write.format("delta").mode("overwrite").saveAsTable(table_name_kmUsers)
+
+# COMMAND ----------
+
+# %sql
+# DROP TABLE IF EXISTS bronze.km_kmUsers;
 
 # COMMAND ----------
 
@@ -371,15 +381,60 @@ df_kmUsers.write.format("delta").mode("overwrite").saveAsTable(
 
 # COMMAND ----------
 
-print(data_add["members"])
+table_name_members = f"{catalog}.bronze.km_members"
+spark.sql(f"DROP TABLE IF EXISTS {table_name_members}")
 
-# COMMAND ----------
+# Define the schema
+schema_members = StructType(
+    [
+        StructField("id", IntegerType(), True),
+        StructField("name", StringType(), True),
+        StructField("firstname", StringType(), True),
+        StructField("lastname", StringType(), True),
+        StructField("mail", StringType(), True),
+        StructField("mobilePhone", StringType(), True),
+        StructField("registered", BooleanType(), True),
+        StructField("mailEnabled", BooleanType(), True),
+        StructField("mailPinnwallEnabled", BooleanType(), True),
+        StructField("localAppReminderEnabled", BooleanType(), True),
+        StructField("pushEnabled", BooleanType(), True),
+        StructField("smsEnabled", BooleanType(), True),
+        StructField("newsletterEnabled", BooleanType(), True),
+        StructField("realMail", StringType(), True),
+        StructField("mailVerified", BooleanType(), True),
+        StructField("pending", BooleanType(), True),
+        StructField("locale", StringType(), True),
+        StructField("touAccepted", BooleanType(), True),
+        StructField("trackingEnabled", BooleanType(), True),
+        StructField("active", BooleanType(), True),
+        StructField("tags", StringType(), True),
+        StructField("userDisplay", StringType(), True),
+        StructField("userSort", StringType(), True),
+        StructField("representationParent", StringType(), True),
+        StructField("representationChild", StringType(), True),
+        StructField("allowGoogleServices", BooleanType(), True),
+        StructField("allowAppleServices", BooleanType(), True),
+        StructField("touAcceptedVersion", StringType(), True),
+        StructField("autoAttendAppointmentOnCreate", BooleanType(), True),
+        StructField("showAttendanceProfilePictures", BooleanType(), True),
+        StructField("imageUrl", StringType(), True),
+        StructField("imageGenerated", BooleanType(), True),
+        # StructField("assignedSubOrgsAndGroups", MapType(StringType(), StringType()), True),
+        StructField("assignedSubOrgsAndGroups", StringType(), True),
+        StructField("showDashboardOnStart", BooleanType(), True),
+    ]
+)
 
-print(data_add["members"][0].keys())
+# Convert the data to the correct format
+data_members = copy.deepcopy(data_add["members"])
+for user in data_members:
+    user["assignedSubOrgsAndGroups"] = str(user["assignedSubOrgsAndGroups"])
 
-# COMMAND ----------
+# Create DataFrame with the defined schema
+df_members = spark.createDataFrame(data_members, schema_members)
 
-
+# Write DataFrame to Delta table
+df_members.write.format("delta").mode("overwrite").saveAsTable(table_name_members)
 
 # COMMAND ----------
 
@@ -388,6 +443,8 @@ print(data_add["members"][0].keys())
 
 # COMMAND ----------
 
+table_name_matrix = f"{catalog}.bronze.km_matrix"
+spark.sql(f"DROP TABLE IF EXISTS {table_name_matrix}")
 # Define the schema
 schema_matrix = StructType([
     StructField("id", IntegerType(), True),
@@ -422,7 +479,7 @@ for user in flattened_matrix:
 df_matrix = spark.createDataFrame(flattened_matrix, schema_matrix)
 
 # Write DataFrame to Delta table
-df_matrix.write.format("delta").mode("overwrite").saveAsTable(f"{catalog}.bronze.km_matrix")
+df_matrix.write.format("delta").mode("overwrite").saveAsTable(table_name_matrix)
 
 # COMMAND ----------
 
@@ -494,3 +551,50 @@ df_kmUserInvitedOrgs = spark.createDataFrame(mapped_kmUserInvitedOrgs, schema_km
 
 # Write DataFrame to Delta table
 df_kmUserInvitedOrgs.write.format("delta").mode("overwrite").saveAsTable(table_name_kmUserInvitedOrgs)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Roles
+
+# COMMAND ----------
+
+table_name_roles = f"{catalog}.bronze.km_roles"
+spark.sql(f"DROP TABLE IF EXISTS {table_name_roles}")
+
+# Define the schema
+schema_roles = StructType(
+    [
+        StructField("kmUserId", IntegerType(), True),
+        StructField("role", StringType(), True),
+    ]
+)
+
+data_roles = copy.deepcopy(data_add["roles"])
+flattened_roles = []
+
+for key, elem in data_roles.items():
+    for value in elem:
+        elem_dict = {
+            "kmUserId": int(value["id"]),
+            "role": key,
+        }
+        flattened_roles.append(elem_dict)
+
+# Create DataFrame with the defined schema
+df_roles = spark.createDataFrame(flattened_roles, schema_roles)
+
+# Write DataFrame to Delta table
+df_roles.write.format("delta").mode("overwrite").saveAsTable(table_name_roles)
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+

@@ -76,7 +76,8 @@ tables = [
 
 # COMMAND ----------
 
-
+# %sql
+# DROP TABLE IF EXISTS bmk_dev.silver.km_orgusermapping;
 
 # COMMAND ----------
 
