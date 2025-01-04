@@ -7,15 +7,13 @@ include:
   - resources/*.yml
 
 targets:
-  stage:
+  staging:
     # The default target uses 'mode: development' to create a development copy.
     # - Deployed resources get prefixed with '[dev my_user_name]'
     # - Any job schedules and triggers are paused by default.
     # See also https://docs.databricks.com/dev-tools/bundles/deployment-modes.html.
-    mode: staging
-    name_prefix: "stage_"
+    mode: development
     default: true
-    trigger_pause_status: PAUSED
     workspace:
       host: https://adb-449724129499183.3.azuredatabricks.net/
     permissions:
@@ -39,4 +37,3 @@ targets:
       user_name: service-user-bmk-dbr-prod
     git:
       branch: release
-    
