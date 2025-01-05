@@ -56,8 +56,8 @@ def merge_bronze_to_silver_id_tables(table_name, catalog):
 
     spark.sql(
         f"""
-        CREATE TABLE IF NOT EXISTS {table_silver} 
-        USING DELTA 
+        CREATE TABLE IF NOT EXISTS {table_silver}
+        USING DELTA
         AS SELECT *, current_timestamp() AS created_date, current_timestamp() AS updated_date FROM {table_bronze} WHERE 1=0
         """
     )
@@ -74,10 +74,6 @@ tables = [
     # {"table_name": "orgusermapping", "mrg_ids": ["orgId", "kmUserId"]},
 ]
 
-# COMMAND ----------
-
-# %sql
-# DROP TABLE IF EXISTS bmk_dev.silver.km_orgusermapping;
 
 # COMMAND ----------
 
@@ -130,8 +126,8 @@ def merge_bronze_to_silver_no_id_tables(
 
     spark.sql(
         f"""
-        CREATE TABLE IF NOT EXISTS {table_silver} 
-        USING DELTA 
+        CREATE TABLE IF NOT EXISTS {table_silver}
+        USING DELTA
         AS SELECT *, current_timestamp() AS created_date, current_timestamp() AS updated_date FROM {table_bronze} WHERE 1=0
         """
     )
@@ -195,8 +191,8 @@ def merge_bronze_to_silver_with_active_flag(
 
     spark.sql(
         f"""
-        CREATE TABLE IF NOT EXISTS {table_silver} 
-        USING DELTA 
+        CREATE TABLE IF NOT EXISTS {table_silver}
+        USING DELTA
         AS SELECT *, current_timestamp() AS created_date, current_timestamp() AS updated_date, 0 AS active FROM {table_bronze} WHERE 1=0
         """
     )

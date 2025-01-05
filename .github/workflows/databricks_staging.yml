@@ -32,7 +32,7 @@ jobs:
       # See https://github.com/databricks/setup-cli
       - uses: databricks/setup-cli@main
 
-      # Deploy the bundle to the "qa" target as defined
+      # Deploy the bundle to the "stage" target as defined
       # in the bundle's settings file.
       - run: databricks bundle deploy
         working-directory: .

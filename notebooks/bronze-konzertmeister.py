@@ -25,7 +25,7 @@ from datetime import datetime
 
 # COMMAND ----------
 
-bronze_volume = Path("/Volumes/bmk_dev/bronze/konzertmeister_attendance/")
+bronze_volume = Path(f"/Volumes/{catalog}/bronze/konzertmeister_attendance/")
 spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.bronze.konzertmeister_attendance")
 
 # COMMAND ----------
@@ -59,7 +59,7 @@ def get_km_auth_token():
     if login_response.status_code == 200:
             # Print the response headers to inspect them
             # print("Response headers:", login_response.headers)
-            
+
             # Extract the specific header value (e.g., 'X-AUTH-TOKEN') if it contains JSON data
             auth_token_header = login_response.headers.get('X-AUTH-TOKEN')
             if auth_token_header:
@@ -184,7 +184,7 @@ get_urls = {
 
 data_add = {}
 for key, value in get_urls.items():
-    bronze_volume_i = Path(f"/Volumes/bmk_dev/bronze/konzertmeister_{key}/")
+    bronze_volume_i = Path(f"/Volumes/{catalog}/bronze/konzertmeister_{key}/")
     # Create the volume if it does not exist
     spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.bronze.konzertmeister_{key}")
     response = km_get_request(url=value)
@@ -483,7 +483,7 @@ df_matrix.write.format("delta").mode("overwrite").saveAsTable(table_name_matrix)
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC # orgUserMapping
 
 # COMMAND ----------
@@ -523,7 +523,7 @@ df_orgUserMapping.write.format("delta").mode("overwrite").saveAsTable(table_name
 
 # COMMAND ----------
 
-# MAGIC %md 
+# MAGIC %md
 # MAGIC # kmUserInvitedOrgs
 
 # COMMAND ----------
