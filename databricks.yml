@@ -1,0 +1,37 @@
+# This is a Databricks asset bundle definition for default_python.
+# See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
+bundle:
+  name: bmk_konzertmeister_bundle
+
+include:
+    - resources/create_tables_job.yml
+#   - resources/*.yml
+
+targets:
+  stage:
+    # The default target uses 'mode: development' to create a development copy.
+    # - Deployed resources get prefixed with '[dev my_user_name]'
+    # - Any job schedules and triggers are paused by default.
+    # See also https://docs.databricks.com/dev-tools/bundles/deployment-modes.html.
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-449724129499183.3.azuredatabricks.net/
+      # root_path: /Users/6a3d401e-d215-4b11-8a30-d439fe27978f/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: 6a3d401e-d215-4b11-8a30-d439fe27978f
+        level: CAN_MANAGE
+    git:
+      branch: main
+
+  prod:
+    mode: production
+    workspace:
+      host: https://adb-2793613915389676.16.azuredatabricks.net/
+      # We explicitly specify /Users/user@company.com to make sure we only have a single copy.
+      root_path: /Workspace/job_bundles/.bundle/${bundle.name}/${bundle.target}
+    permissions:
+      - user_name: 6a3d401e-d215-4b11-8a30-d439fe27978f
+        level: CAN_MANAGE
+    git:
+      branch: release

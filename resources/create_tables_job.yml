@@ -1,0 +1,29 @@
+# The main job for default_python.
+resources:
+  jobs:
+    create_konzertmeister_tables_job:
+      name: create_konzertmeister_tables
+
+      schedule:
+        quartz_cron_expression: "0 0 23 ? * * *"
+        timezone_id: "Europe/Berlin"
+
+      email_notifications:
+        on_failure:
+          - manuel.guth@bmk-buggingen.de
+
+      tasks:
+        - task_key: bronze_km_task
+          notebook_task:
+            notebook_path: ../notebooks/bronze-konzertmeister.py
+        - task_key: silver_km_task
+          depends_on:
+            - task_key: bronze_km_task
+          notebook_task:
+            notebook_path: ../notebooks/silver-konzertmeister.py
+
+
+      environments:
+        - environment_key: Default
+          spec:
+            client: "1"
