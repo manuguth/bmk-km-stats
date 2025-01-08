@@ -1,16 +1,14 @@
-# This workflow validates, deploys, and runs the specified bundle
-# within a pre-production target named "qa".
-name: "Staging deployment"
+name: "Production deployment"
 
 # Ensure that only a single job or workflow using the same concurrency group
 # runs at a time.
 concurrency: 1
 
-# Trigger this workflow whenever a commit is pushed to the release branch.
+# Trigger this workflow whenever a commit is pushed to the main branch.
 on:
   push:
     branches:
-      - release
+      - main
 
 jobs:
   # Used by the "pipeline_update" job to deploy the bundle.
@@ -28,15 +26,15 @@ jobs:
       # See https://github.com/databricks/setup-cli
       - uses: databricks/setup-cli@main
 
-      # Deploy the bundle to the "stage" target as defined
+      # Deploy the bundle to the "prod" target as defined
       # in the bundle's settings file.
-      - run: databricks bundle deploy
+      - run: databricks bundle deploy --target prod
         working-directory: .
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_STAGE }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
           DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
           DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
-          DATABRICKS_BUNDLE_ENV: stage
+          DATABRICKS_BUNDLE_ENV: prod
 
   # Validate, deploy, and then run the bundle.
   pipeline_update:
@@ -56,10 +54,10 @@ jobs:
 
       # Run the Databricks workflow named "my-job" as defined in the
       # bundle that was just deployed.
-      - run: databricks bundle run create_konzertmeister_tables_job --refresh-all
+      - run: databricks bundle run --target prod create_konzertmeister_tables_job --refresh-all
         working-directory: .
         env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_STAGE }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
           DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
           DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
-          DATABRICKS_BUNDLE_ENV: stage
+          DATABRICKS_BUNDLE_ENV: prod

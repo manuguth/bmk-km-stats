@@ -1,11 +1,13 @@
-# This is a Databricks asset bundle definition for default_python.
 # See https://docs.databricks.com/dev-tools/bundles/index.html for documentation.
 bundle:
   name: bmk_konzertmeister_bundle
 
+variables:
+  sp_name:
+    description: The Databricks service principal name.
+
 include:
     - resources/create_tables_job.yml
-#   - resources/*.yml
 
 targets:
   stage:
@@ -16,22 +18,22 @@ targets:
     mode: development
     default: true
     workspace:
-      host: https://adb-449724129499183.3.azuredatabricks.net/
-      # root_path: /Users/6a3d401e-d215-4b11-8a30-d439fe27978f/.bundle/${bundle.name}/${bundle.target}
+      host: "https://adb-449724129499183.3.azuredatabricks.net/"
     permissions:
-      - user_name: 6a3d401e-d215-4b11-8a30-d439fe27978f
+      - user_name: ${var.sp_name}
         level: CAN_MANAGE
     git:
-      branch: main
+      branch: release
 
   prod:
     mode: production
     workspace:
       host: https://adb-2793613915389676.16.azuredatabricks.net/
       # We explicitly specify /Users/user@company.com to make sure we only have a single copy.
+      # root_path: /Users/6a3d401e-d215-4b11-8a30-d439fe27978f/.bundle/${bundle.name}/${bundle.target}
       root_path: /Workspace/job_bundles/.bundle/${bundle.name}/${bundle.target}
     permissions:
-      - user_name: 6a3d401e-d215-4b11-8a30-d439fe27978f
+      - user_name: ${var.sp_name}
         level: CAN_MANAGE
     git:
-      branch: release
+      branch: main
