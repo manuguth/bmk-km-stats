@@ -56,7 +56,7 @@ jobs:
 
       # Run the Databricks workflow named "my-job" as defined in the
       # bundle that was just deployed.
-      - run: databricks bundle run default_python_job --refresh-all
+      - run: databricks bundle run bronze_km_task --refresh-all
         working-directory: .
         env:
           DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_STAGE }}
