@@ -6,13 +6,9 @@ name: "Staging deployment"
 # runs at a time.
 concurrency: 1
 
-# Trigger this workflow whenever a pull request is opened against the repo's
-# main branch or an existing pull request's head branch is updated.
+# Trigger this workflow whenever a commit is pushed to the main branch.
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
+  push:
     branches:
       - main
 
@@ -37,7 +33,9 @@ jobs:
       - run: databricks bundle deploy
         working-directory: .
         env:
-          DATABRICKS_TOKEN: ${{ secrets.SP_TOKEN }}
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_STAGE }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
           DATABRICKS_BUNDLE_ENV: stage
 
   # Validate, deploy, and then run the bundle.

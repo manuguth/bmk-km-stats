@@ -19,13 +19,10 @@ targets:
       host: https://adb-449724129499183.3.azuredatabricks.net/
       # root_path: /Users/6a3d401e-d215-4b11-8a30-d439fe27978f/.bundle/${bundle.name}/${bundle.target}
     permissions:
-      # - user_name: service-user-bmk-dbr-prod
       - user_name: 6a3d401e-d215-4b11-8a30-d439fe27978f
         level: CAN_MANAGE
-    # run_as:
-    #   user_name: service-user-bmk-dbr-prod
-    # git:
-    #   branch: dev_gmu
+    git:
+      branch: main
 
   prod:
     mode: production
@@ -34,9 +31,7 @@ targets:
       # We explicitly specify /Users/user@company.com to make sure we only have a single copy.
       root_path: /Workspace/job_bundles/.bundle/${bundle.name}/${bundle.target}
     permissions:
-      - user_name: service-user-bmk-dbr-prod
+      - user_name: 6a3d401e-d215-4b11-8a30-d439fe27978f
         level: CAN_MANAGE
-    run_as:
-      user_name: service-user-bmk-dbr-prod
     git:
       branch: release
