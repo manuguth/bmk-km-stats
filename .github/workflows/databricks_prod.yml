@@ -63,3 +63,11 @@ jobs:
           DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
           BUNDLE_VAR_sp_name: ${{ secrets.DATABRICKS_CLIENT_ID  }}
           DATABRICKS_BUNDLE_ENV: prod
+      - run: databricks bundle run --target prod create_konzertmeister_gold_views_job --refresh-all
+        working-directory: .
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
+          DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+          BUNDLE_VAR_sp_name: ${{ secrets.DATABRICKS_CLIENT_ID  }}
+          DATABRICKS_BUNDLE_ENV: prod
