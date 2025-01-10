@@ -22,8 +22,8 @@ targets:
     permissions:
       - user_name: ${var.sp_name}
         level: CAN_MANAGE
-    git:
-      branch: release
+    # git:
+    #   branch: release
 
   prod:
     mode: production

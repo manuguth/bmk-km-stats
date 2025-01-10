@@ -27,3 +27,25 @@ resources:
         - environment_key: Default
           spec:
             client: "1"
+    create_konzertmeister_gold_views_job:
+      name: create_konzertmeister_gold_views
+
+      email_notifications:
+        on_failure:
+          - manuel.guth@bmk-buggingen.de
+
+      tasks:
+        - task_key: silver_add_tables
+          notebook_task:
+            notebook_path: ../notebooks/silver-additional-tables.py
+        - task_key: gold_km_task
+          depends_on:
+            - task_key: silver_add_tables
+          notebook_task:
+            notebook_path: ../notebooks/gold-konzertmeister.py
+
+
+      environments:
+        - environment_key: Default
+          spec:
+            client: "1"
