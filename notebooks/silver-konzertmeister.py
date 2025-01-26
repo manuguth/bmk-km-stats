@@ -54,6 +54,12 @@ def merge_bronze_to_silver_id_tables(table_name, catalog):
         )
     """
 
+    merge_stmt += (
+        "WHEN NOT MATCHED BY SOURCE THEN UPDATE SET target.active = False"
+        if "appointments" in table_name
+        else ""
+    )
+
     spark.sql(
         f"""
         CREATE TABLE IF NOT EXISTS {table_silver}
