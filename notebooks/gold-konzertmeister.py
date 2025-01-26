@@ -60,6 +60,7 @@ dbutils.widgets.text("catalog", catalog)
 # MAGIC     left join silver.km_appointments_codes as codes on codes.typid = aptmt.typid
 # MAGIC   WHERE
 # MAGIC     1 = 1 -- AND aptmt.typid IN (1, 2)
+# MAGIC     AND aptmt.active = True
 # MAGIC   GROUP BY
 # MAGIC     aptmt.id,
 # MAGIC     aptmt.typid,
@@ -147,9 +148,9 @@ dbutils.widgets.text("catalog", catalog)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select * from IDENTIFIER(:catalog || '.gold.V_km_appointments_summary')
-# MAGIC order by appointment_date desc
+# %sql
+# select * from IDENTIFIER(:catalog || '.gold.V_km_appointments_summary')
+# order by appointment_date desc
 
 # COMMAND ----------
 
@@ -202,11 +203,12 @@ dbutils.widgets.text("catalog", catalog)
 # MAGIC     LEFT JOIN silver.km_kmusers AS users ON users.id = map.kmuserid
 # MAGIC     LEFT JOIN silver.km_orgs AS org ON map.orgId = org.id
 # MAGIC     LEFT JOIN silver.km_matrix AS matrix ON matrix.kmUserId = map.kmuserid
-# MAGIC     LEFT JOIN silver.km_appointments AS aptmt ON aptmt.id = matrix.appointmentid
+# MAGIC     LEFT JOIN silver.km_appointments AS aptmt ON aptmt.id = matrix.appointmentid 
 # MAGIC     LEFT JOIN silver.km_appointments_codes as codes on codes.typid = aptmt.typid
 # MAGIC   WHERE
 # MAGIC     org.parentid IS NOT NULL
 # MAGIC     AND map.active = 1
+# MAGIC     AND aptmt.active = True
 # MAGIC )
 # MAGIC select
 # MAGIC   usratt.*
@@ -268,6 +270,7 @@ dbutils.widgets.text("catalog", catalog)
 # MAGIC   WHERE
 # MAGIC     org.parentid IS NOT NULL
 # MAGIC     AND map.active = 1
+# MAGIC     AND aptmt.active = True
 # MAGIC   GROUP BY
 # MAGIC     map.kmuserid,
 # MAGIC     users.name,
@@ -342,6 +345,7 @@ dbutils.widgets.text("catalog", catalog)
 # MAGIC   WHERE
 # MAGIC     org.parentid IS NOT NULL
 # MAGIC     AND map.active = 1
+# MAGIC     AND aptmt.active = True
 # MAGIC   GROUP BY
 # MAGIC     map.kmuserid,
 # MAGIC     users.name,
@@ -363,21 +367,21 @@ dbutils.widgets.text("catalog", catalog)
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select
-# MAGIC   *
-# MAGIC from
-# MAGIC   gold.V_km_user_attendance_summary_eoy
-# MAGIC where
-# MAGIC   year = 2024
-# MAGIC order by attendance_rate desc
+# %sql
+# select
+#   *
+# from
+#   gold.V_km_user_attendance_summary_eoy
+# where
+#   year = 2024
+# order by attendance_rate desc
 
 # COMMAND ----------
 
-# MAGIC %sql
-# MAGIC select *
-# MAGIC from 
-# MAGIC gold.V_km_user_attendance
+# %sql
+# select *
+# from 
+# gold.V_km_user_attendance
 
 # COMMAND ----------
 

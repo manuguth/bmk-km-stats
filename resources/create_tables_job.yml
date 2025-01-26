@@ -5,7 +5,7 @@ resources:
       name: create_konzertmeister_tables
 
       schedule:
-        quartz_cron_expression: "0 0 23 ? * * *"
+        quartz_cron_expression: "0 0 9 ? * * *"
         timezone_id: "Europe/Berlin"
 
       email_notifications:
