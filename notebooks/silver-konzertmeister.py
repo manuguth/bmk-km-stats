@@ -76,6 +76,7 @@ tables = [
     "orgs",
     "matrix",
     "kmusers",
+    "members",
     # {"table_name": "kmuserinvitedorgs", "mrg_ids": ["kmUserId", "orgId", "appointmentId"]},
     # {"table_name": "orgusermapping", "mrg_ids": ["orgId", "kmUserId"]},
 ]
