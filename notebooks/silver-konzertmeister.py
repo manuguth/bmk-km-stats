@@ -76,6 +76,7 @@ tables = [
     "orgs",
     "matrix",
     "kmusers",
+    "members",
     # {"table_name": "kmuserinvitedorgs", "mrg_ids": ["kmUserId", "orgId", "appointmentId"]},
     # {"table_name": "orgusermapping", "mrg_ids": ["orgId", "kmUserId"]},
 ]
@@ -144,6 +145,7 @@ def merge_bronze_to_silver_no_id_tables(
 tables_no_id = [
     {"table_name": "kmuserinvitedorgs", "mrg_ids": ["kmUserId", "orgId", "appointmentId"]},
     {"table_name": "orgusermapping", "mrg_ids": ["orgId", "kmUserId"]},
+    {"table_name": "roles", "mrg_ids": ["kmUserId", "role"]},
 ]
 
 # COMMAND ----------
