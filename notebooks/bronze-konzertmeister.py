@@ -29,7 +29,6 @@ from pathlib import Path
 from datetime import datetime
 import copy
 
-
 # COMMAND ----------
 
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType, BooleanType, MapType
@@ -392,9 +391,7 @@ for _, elem in data['matrix'].items():
 # Convert the data to the correct format
 for user in flattened_matrix:
     for field in ['updatedAt']:
-        if field not in user:
-            user[field] = None
-        elif user[field] is not None and isinstance(user[field], str):
+        if field in user and user[field] is not None:
             user[field] = datetime.strptime(user[field], '%Y-%m-%dT%H:%M:%SZ')
 
 
@@ -403,6 +400,7 @@ df_matrix = spark.createDataFrame(flattened_matrix, schema_matrix)
 
 # Write DataFrame to Delta table
 df_matrix.write.format("delta").mode("overwrite").saveAsTable(table_name_matrix)
+
 
 # COMMAND ----------
 
