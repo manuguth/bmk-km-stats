@@ -56,7 +56,7 @@ import importlib.util
 
 spec = importlib.util.spec_from_file_location(
     "km_api",
-    "/Workspace/Users/manuel.guth@bmk-buggingen.de/bmk-km-stats/utils/km_api.py",
+    "../utils/km_api.py",
 )
 km_api = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(km_api)
