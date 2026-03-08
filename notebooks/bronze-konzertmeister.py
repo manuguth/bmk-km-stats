@@ -1,13 +1,25 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# ///
 # MAGIC %md
-# MAGIC # Reading Bronze data from Volume and writing them into bronze tables
+# MAGIC # Reading Konzertmeister API and writing it to bronze tables
 
 # COMMAND ----------
 
-default_env_catalog = spark.sql("SELECT current_catalog()").collect()[0][0]
-catalog = default_env_catalog
+# MAGIC %md 
+# MAGIC ## Imports and Setup
+
+# COMMAND ----------
+
+dbutils.widgets.text("env", "dev", "Environment")
+env = dbutils.widgets.get("env")
+
+# COMMAND ----------
+
+catalog = f"bmk_{env}"
 prod_catalog = "bmk_prod"
-env = catalog.split("_")[-1]
 
 # COMMAND ----------
 
@@ -25,6 +37,11 @@ from datetime import datetime
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Setting up Volume to save jsons in
+
+# COMMAND ----------
+
 bronze_volume = Path(f"/Volumes/{catalog}/bronze/konzertmeister_attendance/")
 spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.bronze.konzertmeister_attendance")
 
@@ -35,133 +52,40 @@ spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.bronze.konzertmeister_attendan
 
 # COMMAND ----------
 
-def get_km_auth_token():
-    login_url = "https://rest.konzertmeister.app/api/v2/login"
-    password = dbutils.secrets.get(scope="bmk-key-vault-scope", key="km-test-user-password-post")
-    mail = dbutils.secrets.get(scope="bmk-key-vault-scope", key="km-test-user-mail")
-    # Set up the headers with the Content-Type
-    headers = {
-        'Content-Type': 'application/json'
-    }
+# DBTITLE 1,Import KM API utilities
+import importlib.util
 
-    # Your payload for the POST request
-    payload = {
-        "mail": mail,
-        "password": password,
-        "locale": "en_US",  # Replace with the desired locale
-        "timezone": "Europe/Berlin"  # Replace with the desired timezone
-    }
+spec = importlib.util.spec_from_file_location(
+    "km_api",
+    "/Workspace/Users/manuel.guth@bmk-buggingen.de/bmk-km-stats/utils/km_api.py",
+)
+km_api = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(km_api)
 
-    # Send a POST request to the login endpoint
-    login_response = requests.post(login_url, json=payload, headers=headers)
+# Expose functions at module level for convenience
+get_km_auth_token = km_api.get_km_auth_token
+km_get_request = km_api.km_get_request
+get_km_history = km_api.get_km_history
 
-    # Check if the login was successful
-    if login_response.status_code == 200:
-            # Print the response headers to inspect them
-            # print("Response headers:", login_response.headers)
-
-            # Extract the specific header value (e.g., 'X-AUTH-TOKEN') if it contains JSON data
-            auth_token_header = login_response.headers.get('X-AUTH-TOKEN')
-            if auth_token_header:
-                print("Auth token retrieved")
-    return auth_token_header
-
+# Initialise with dbutils so the module can access secrets
+km_api.init(dbutils)
 
 # COMMAND ----------
 
-def get_km_history(
-    start_date: str,
-    end_date: str,
-):
-    # The URL to access the data
-    url = "https://rest.konzertmeister.app/api/v2/att/matrix/history"
+from datetime import timedelta
 
-    token = get_km_auth_token()
-
-    # Set up the headers with the Bearer token and Content-Type
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-
-    # Your payload for the POST request
-    payload = {
-        "start": f"{start_date}T00:00:00+02:00",
-        "end": f"{end_date}T23:59:59+01:00",
-        "parentOrgId": 14981,
-        "subOrgIds": None,
-        "tagIds": None,
-        "typIds": [1, 2, 3, 4, 5],
-        "typesAndTagsWithAnd": True,
-    }
-
-    # Send a POST request to the URL with the headers
-    response = requests.post(url, json=payload, headers=headers)
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        try:
-            # Attempt to parse the response as JSON
-            data = response.json()
-            print("retrieved data")
-            return data
-        except ValueError:
-            print("Failed to parse response as JSON")
-            print("Response text:", response.text)
-
-# COMMAND ----------
-
-def km_get_request(url: str):
-    """
-    Get data from a given URL using a GET request with authorization.
-
-    Parameters
-    ----------
-    url : str
-        The URL to send the GET request to.
-
-    Returns
-    -------
-    dict
-        The JSON response from the GET request if successful.
-
-    Raises
-    ------
-    ValueError
-        If the response cannot be parsed as JSON.
-    """
-
-    token = get_km_auth_token()
-
-    # Set up the headers with the Bearer token and Content-Type
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-    }
-
-    # Send a GET request to the URL with the headers
-    response = requests.get(url, headers=headers)
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        try:
-            # Attempt to parse the response as JSON
-            data = response.json()
-            print("retrieved data")
-            return data
-        except ValueError:
-            print("Failed to parse response as JSON")
-            print("Response text:", response.text)
-
-# COMMAND ----------
-
-today = datetime.now().strftime('%Y-%m-%d')
+today_dt = datetime.now()
+today = today_dt.strftime('%Y-%m-%d')
+two_years_ahead = (today_dt + timedelta(days=2*365)).strftime('%Y-%m-%d')
 
 data = get_km_history (
     start_date="2020-07-01", # first possible start date, everything before is not properly working from the Konzertmeister website
-    end_date=today,
+    end_date=two_years_ahead,
 )
 
 # COMMAND ----------
 
-file_path = bronze_volume / f"attendance_km-2020-07-01_to_{today}.json"
+file_path = bronze_volume / f"attendance_km-2020-07-01_to_{two_years_ahead}.json"
 
 # COMMAND ----------
 
@@ -175,10 +99,6 @@ get_urls = {
     "roles": "https://rest.konzertmeister.app/api/v2/org/14981/roles",
     "org_info": "https://rest.konzertmeister.app/api/v2/org/14981",
 }
-
-# COMMAND ----------
-
-
 
 # COMMAND ----------
 
@@ -460,6 +380,7 @@ schema_matrix = StructType([
     StructField("positive", BooleanType(), True),
     StructField("maybe", BooleanType(), True),
     StructField("unanswered", BooleanType(), True),
+    StructField("comment", StringType(), True),
     # Add other fields as per your data
 ])
 
@@ -471,7 +392,9 @@ for _, elem in data['matrix'].items():
 # Convert the data to the correct format
 for user in flattened_matrix:
     for field in ['updatedAt']:
-        if user[field] is not None:
+        if field not in user:
+            user[field] = None
+        elif user[field] is not None and isinstance(user[field], str):
             user[field] = datetime.strptime(user[field], '%Y-%m-%dT%H:%M:%SZ')
 
 

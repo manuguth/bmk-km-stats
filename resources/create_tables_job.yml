@@ -16,11 +16,15 @@ resources:
         - task_key: bronze_km_task
           notebook_task:
             notebook_path: ../notebooks/bronze-konzertmeister.py
+            base_parameters:
+              env: ${var.environment}
         - task_key: silver_km_task
           depends_on:
             - task_key: bronze_km_task
           notebook_task:
             notebook_path: ../notebooks/silver-konzertmeister.py
+            base_parameters:
+              env: ${var.environment}
 
 
       environments:
@@ -38,11 +42,15 @@ resources:
         - task_key: silver_add_tables
           notebook_task:
             notebook_path: ../notebooks/silver-additional-tables.py
+            base_parameters:
+              env: ${var.environment}
         - task_key: gold_km_task
           depends_on:
             - task_key: silver_add_tables
           notebook_task:
             notebook_path: ../notebooks/gold-konzertmeister.py
+            base_parameters:
+              env: ${var.environment}
 
 
       environments:

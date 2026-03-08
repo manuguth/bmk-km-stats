@@ -1,13 +1,17 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# ///
 # MAGIC %md
 # MAGIC # Additional custom silver tables 
 
 # COMMAND ----------
 
-default_env_catalog = spark.sql("SELECT current_catalog()").collect()[0][0]
-catalog = default_env_catalog
+dbutils.widgets.text("env", "dev", "Environment")
+env = dbutils.widgets.get("env")
+catalog = f"bmk_{env}"
 prod_catalog = "bmk_prod"
-env = catalog.split("_")[-1]
 
 # COMMAND ----------
 

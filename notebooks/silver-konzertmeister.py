@@ -1,13 +1,20 @@
 # Databricks notebook source
+# /// script
+# [tool.databricks.environment]
+# environment_version = "5"
+# ///
 # MAGIC %md
 # MAGIC # Merging Bronze Tables into Silver Tables
 
 # COMMAND ----------
 
-default_env_catalog = spark.sql("SELECT current_catalog()").collect()[0][0]
-catalog = default_env_catalog
+dbutils.widgets.text("env", "dev", "Environment")
+env = dbutils.widgets.get("env")
+
+# COMMAND ----------
+
+catalog = f"bmk_{env}"
 prod_catalog = "bmk_prod"
-env = catalog.split("_")[-1]
 
 # COMMAND ----------
 
@@ -25,14 +32,30 @@ def merge_bronze_to_silver_id_tables(table_name, catalog):
 
     cols_bronze = spark.table(table_bronze).columns
 
+    # Create silver table if it doesn't exist
+    spark.sql(
+        f"""
+        CREATE TABLE IF NOT EXISTS {table_silver}
+        USING DELTA
+        AS SELECT *, current_timestamp() AS created_date, current_timestamp() AS updated_date FROM {table_bronze} WHERE 1=0
+        """
+    )
+
+    # Handle schema evolution: add new bronze columns to silver
+    cols_silver = spark.table(table_silver).columns
+    for col in cols_bronze:
+        if col not in cols_silver:
+            col_type = spark.table(table_bronze).schema[col].dataType.simpleString()
+            spark.sql(f"ALTER TABLE {table_silver} ADD COLUMN `{col}` {col_type}")
+
     update_stmt = ""
     for col in cols_bronze:
-        update_stmt += f"target.{col} = source.{col}, "
-    insert_stmt = ",".join(cols_bronze)
+        update_stmt += f"target.`{col}` = source.`{col}`, "
+    insert_stmt = ",".join(f"`{col}`" for col in cols_bronze)
 
     insert_stmt_values = ""
     for col in cols_bronze:
-        insert_stmt_values += f"source.{col}, "
+        insert_stmt_values += f"source.`{col}`, "
 
     merge_stmt = f"""
     MERGE INTO {table_silver} AS target
@@ -60,13 +83,6 @@ def merge_bronze_to_silver_id_tables(table_name, catalog):
         else ""
     )
 
-    spark.sql(
-        f"""
-        CREATE TABLE IF NOT EXISTS {table_silver}
-        USING DELTA
-        AS SELECT *, current_timestamp() AS created_date, current_timestamp() AS updated_date FROM {table_bronze} WHERE 1=0
-        """
-    )
     spark.sql(merge_stmt)
 
 # COMMAND ----------
@@ -76,6 +92,7 @@ tables = [
     "orgs",
     "matrix",
     "kmusers",
+    "members",
     # {"table_name": "kmuserinvitedorgs", "mrg_ids": ["kmUserId", "orgId", "appointmentId"]},
     # {"table_name": "orgusermapping", "mrg_ids": ["orgId", "kmUserId"]},
 ]
