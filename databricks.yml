@@ -5,6 +5,8 @@ bundle:
 variables:
   sp_name:
     description: The Databricks service principal name.
+  environment:
+    description: The deployment environment name.
 
 include:
     - resources/create_tables_job.yml
@@ -19,6 +21,8 @@ targets:
     default: true
     workspace:
       host: "https://adb-449724129499183.3.azuredatabricks.net/"
+    variables:
+      environment: stage
     permissions:
       - user_name: ${var.sp_name}
         level: CAN_MANAGE
@@ -32,6 +36,8 @@ targets:
       # We explicitly specify /Users/user@company.com to make sure we only have a single copy.
       # root_path: /Users/6a3d401e-d215-4b11-8a30-d439fe27978f/.bundle/${bundle.name}/${bundle.target}
       root_path: /Workspace/job_bundles/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      environment: prod
     permissions:
       - user_name: ${var.sp_name}
         level: CAN_MANAGE
